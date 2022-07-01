@@ -1,0 +1,21 @@
+{
+  "name": "roman/boxberry-list-points",
+  "autoload": {
+    "psr-4": {
+      "BoxberryListPoints\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Roman",
+      "email": "chess.terr.dev@yandex.ru"
+    }
+  ],
+  "require": {
+    "monolog/monolog": "3.1.*",
+    "symfony/process": "v5.4.8"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "9.5.21"
+  }
+}

@@ -1,8 +1,8 @@
 @charset "UTF-8";
 @font-face {
   font-family: "im-line-icons";
-  src: url("assetsm-line-icons.eot");
-  src: url("assetsm-line-icons.eot?#iefix") format("embedded-opentype"), url("assetsm-line-icons.ttf") format("truetype"), url("assetsm-line-icons.woff") format("woff"), url("assetsm-line-icons.svg") format("svg");
+  src: url("./assets/im-line-icons.eot");
+  src: url("./assets/im-line-icons.eot?#iefix") format("embedded-opentype"), url("./assets/im-line-icons.ttf") format("truetype"), url("./assets/im-line-icons.woff") format("woff"), url("./assets/im-line-icons.svg") format("svg");
   font-weight: normal;
   font-style: normal;
 }

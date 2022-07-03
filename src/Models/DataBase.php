@@ -101,4 +101,19 @@ class DataBase
 
         return $statement->fetch(PDO::FETCH_ASSOC);
     }
+
+    public function beginTransaction()
+    {
+        $this->dataBaseHost->beginTransaction();
+    }
+
+    public function commit()
+    {
+        $this->dataBaseHost->commit();
+    }
+
+    public function rollback()
+    {
+        $this->dataBaseHost->rollBack();
+    }
 }

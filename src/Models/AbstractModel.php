@@ -7,9 +7,9 @@ abstract class AbstractModel
     protected DataBase $dataBase;
     public function __construct(?int $id = null)
     {
-        $this->dataBase = new DataBase();
-
         if ($id) {
+            $this->dataBase = new DataBase();
+
             $this->setFields(
                 $this->dataBase->getEntryById($this->baseName(), $id)
             );
@@ -44,6 +44,12 @@ abstract class AbstractModel
     protected function baseName()
     {
         return basename(str_replace('\\', '/', $this::class));
+    }
+
+    public function setDataBase(DataBase $dataBase): AbstractModel
+    {
+        $this->dataBase = $dataBase;
+        return $this;
     }
 
     public function getFields(): array

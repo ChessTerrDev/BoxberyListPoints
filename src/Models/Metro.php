@@ -4,12 +4,22 @@ namespace BoxberryListPoints\Models;
 
 class Metro extends AbstractModel
 {
-    protected string $MetroName;
+    protected ?int $id;
+    protected ?string $MetroName;
     protected int $City_id;
 
     public function __construct(?int $id = null)
     {
-        parent::__construct($id);
+        $this->id = $id;
+        parent::__construct($this->id);
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getId(): ?int
+    {
+        return $this->id;
     }
 
     /**

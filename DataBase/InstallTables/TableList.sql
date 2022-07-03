@@ -144,7 +144,7 @@ CREATE TABLE "GPS"
 CREATE TABLE "Photos"
 (
     id             serial  NOT NULL,
-    "PhotoBase64"  text,
+    "PhotoLink"  text,
     "ListPoint_id" integer NOT NULL,
     CONSTRAINT "Photos_pkey" PRIMARY KEY (id)
 );

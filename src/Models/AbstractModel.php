@@ -7,28 +7,47 @@ abstract class AbstractModel
     protected DataBase $dataBase;
     public function __construct(?int $id = null)
     {
-        if ($id) {
-            $this->dataBase = new DataBase();
-
+        if ($id)
             $this->setFields(
-                $this->dataBase->getEntryById($this->baseName(), $id)
+                $this->initDataBase()->getEntryById($this->baseName(), $id)
             );
-        }
     }
 
     public function addEntryInDataBase(?array $notFields = null, ?string $PrimaryKey = 'id')
     {
         $param = $this->getFields();
 
-        if ($notFields) foreach ($notFields as $keyField => $valField)
-            unset($param[$keyField]);
+        $this->removeUnnecessaryFields($param, $notFields);
 
-        $result = $this->dataBase->addEntry($this->baseName(), $param, $PrimaryKey);
+        $result = $this
+            ->initDataBase()
+            ->addEntry($this->baseName(), $param, $PrimaryKey);
 
         if (is_int($result)) $this->id = $result;
         if (is_bool($result)) return $result;
 
         return $this;
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function find(?array $notFields = null)
+    {
+        $param = $this->getFields();
+
+        $this->removeUnnecessaryFields($param, $notFields);
+        $results = $this
+            ->initDataBase()
+            ->findByParams($this->baseName(), $param);
+
+        foreach ($results as $key => $result ) {
+            $results[$key] = clone $this->setFields($result);
+        }
+
+
+        return $results;
+
     }
 
     public function deleted()
@@ -50,6 +69,13 @@ abstract class AbstractModel
     {
         $this->dataBase = $dataBase;
         return $this;
+    }
+
+    private function removeUnnecessaryFields(array $param, ?array $notFields)
+    {
+        if (!empty($notFields))
+            foreach ($notFields as $keyField => $valField)
+                unset($param[$keyField]);
     }
 
     public function getFields(): array
@@ -76,7 +102,8 @@ abstract class AbstractModel
     {
         $retFieldsArr = [];
         foreach ($fields as $key => $val) {
-            $name = ucfirst($key);
+            $name = explode('_', $key);
+            $name = implode(array_map('ucfirst', $name));
             $getMethod = 'get' . $name;
             $isMethod = 'is' . $name;
             if (method_exists($this, $getMethod)) {
@@ -114,7 +141,9 @@ abstract class AbstractModel
                     $value = (array)$value;
 
                 if (!is_object($value)) {
-                    $method = 'set' . ucfirst($field);
+                    $name = explode('_', $field);
+                    $name = implode(array_map('ucfirst', $name));
+                    $method = 'set' . ucfirst($name);
 
                     if (method_exists($this, $method))
                         $this->$method($this->getValueField($value));
@@ -124,6 +153,12 @@ abstract class AbstractModel
         return $this;
     }
 
+    private function initDataBase(): ?DataBase
+    {
+        if (empty($this->dataBase)) $this->dataBase = new DataBase();
+
+        return $this->dataBase;
+    }
     /**
      * @param $value
      * @return mixed

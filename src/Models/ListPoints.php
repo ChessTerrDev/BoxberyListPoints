@@ -13,7 +13,6 @@ class ListPoints extends AbstractModel
     protected int    $CountryCode;
     protected int    $Area_id;
     protected int    $City_id;
-    protected int    $Metro_id;
     protected int    $Address_id;
     protected int    $GPS_id;
     protected int    $Property_id;
@@ -35,6 +34,14 @@ class ListPoints extends AbstractModel
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    /**
+     * @param int|null $id
+     */
+    protected function setId(?int $id): void
+    {
+        $this->id = $id;
     }
 
     /**
@@ -181,23 +188,6 @@ class ListPoints extends AbstractModel
         return $this;
     }
 
-    /**
-     * @return int
-     */
-    public function getMetroId(): int
-    {
-        return $this->Metro_id;
-    }
-
-    /**
-     * @param int $Metro_id
-     * @return ListPoints
-     */
-    public function setMetroId(int $Metro_id): ListPoints
-    {
-        $this->Metro_id = $Metro_id;
-        return $this;
-    }
 
     /**
      * @return int

@@ -29,6 +29,13 @@ class Addresses extends AbstractModel
         return $this->id;
     }
 
+    /**
+     * @param int|null $id
+     */
+    protected function setId(?int $id): void
+    {
+        $this->id = $id;
+    }
 
     /**
      * @return string|null

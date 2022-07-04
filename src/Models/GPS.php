@@ -24,6 +24,14 @@ class GPS extends AbstractModel
     }
 
     /**
+     * @param int|null $id
+     */
+    protected function setId(?int $id): void
+    {
+        $this->id = $id;
+    }
+
+    /**
      * @return float
      */
     public function getLongitude(): float

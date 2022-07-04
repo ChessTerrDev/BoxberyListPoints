@@ -5,6 +5,7 @@ namespace BoxberryListPoints\Models;
 class Addresses extends AbstractModel
 {
     protected ?int $id;
+    protected int $Cities_id;
     protected ?string $Street;
     protected ?string $House;
     protected ?string $Structure;
@@ -35,6 +36,23 @@ class Addresses extends AbstractModel
     protected function setId(?int $id): void
     {
         $this->id = $id;
+    }
+
+    /**
+     * @return int
+     */
+    public function getCitiesId(): int
+    {
+        return $this->Cities_id;
+    }
+
+    /**
+     * @param int $Cities_id
+     */
+    public function setCitiesId(int $Cities_id)
+    {
+        $this->Cities_id = $Cities_id;
+        return $this;
     }
 
     /**

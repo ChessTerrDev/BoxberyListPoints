@@ -1,23 +1,23 @@
 SET check_function_bodies = false;
 
+DROP VIEW IF EXISTS "viewProperties", "viewCountries", "viewAreas", "viewCities", "viewMetro", "viewWorkShedule", "viewAddresses", "viewGPS", "viewPhotos", "viewListPointsShort", "viewListPointsFull";
 DROP TABLE IF EXISTS "ListPoints","Countries","Addresses","Areas","Cities","Metro","Properties","WorkShedule","GPS","Photos";
 
 CREATE TABLE "ListPoints"
 (
     id               serial                NOT NULL,
-    "Code"           character varying(20) NOT NULL,
-    "TerminalCode"   character varying(20),
-    "Name"           character varying(70),
+    "Code"           character varying(90) NOT NULL,
+    "TerminalCode"   character varying(90),
+    "Name"           character varying(150),
     "Organization"   character varying(150),
     "ZipCode"        integer,
     "CountryCode"    integer               NOT NULL,
     "Area_id"        integer               NOT NULL,
     "City_id"        integer               NOT NULL,
-    "Metro_id"       integer               NOT NULL,
     "Address_id"     integer               NOT NULL,
     "GPS_id"         integer               NOT NULL,
     "Property_id"    integer               NOT NULL,
-    "Phone"          character varying(20),
+    "Phone"          character varying(90),
     "WorkShedule_id" integer               NOT NULL,
     "UpdateDate"     date                  NOT NULL,
     "Active"         bool DEFAULT true,
@@ -65,9 +65,10 @@ CREATE TABLE "Cities"
 
 CREATE TABLE "Metro"
 (
-    id          serial  NOT NULL,
-    "City_id"   integer NOT NULL,
-    "MetroName" character varying(90),
+    id              serial  NOT NULL,
+    "City_id"       integer NOT NULL,
+    "MetroName"     character varying(90),
+    "ListPoints_id" integer NOT NULL,
     CONSTRAINT "Metro_pkey" PRIMARY KEY (id)
 );
 
@@ -144,7 +145,7 @@ CREATE TABLE "GPS"
 CREATE TABLE "Photos"
 (
     id             serial  NOT NULL,
-    "PhotoLink"  text,
+    "PhotoLink"    text,
     "ListPoint_id" integer NOT NULL,
     CONSTRAINT "Photos_pkey" PRIMARY KEY (id)
 );
@@ -164,10 +165,6 @@ ALTER TABLE "ListPoints"
 ALTER TABLE "Metro"
     ADD CONSTRAINT "Metro_City_id_fkey"
         FOREIGN KEY ("City_id") REFERENCES "Cities" (id);
-
-ALTER TABLE "ListPoints"
-    ADD CONSTRAINT "ListPoints_Metro_id_fkey"
-        FOREIGN KEY ("Metro_id") REFERENCES "Metro" (id);
 
 ALTER TABLE "ListPoints"
     ADD CONSTRAINT "ListPoints_Address_id_fkey"
@@ -196,6 +193,10 @@ ALTER TABLE "Areas"
 ALTER TABLE "Cities"
     ADD CONSTRAINT "Cities_Area_id_fkey"
         FOREIGN KEY ("Area_id") REFERENCES "Areas" (id);
+
+ALTER TABLE "Metro"
+    ADD CONSTRAINT "Metro_ListPoints_id_fkey"
+        FOREIGN KEY ("ListPoints_id") REFERENCES "ListPoints" (id);
 
 CREATE VIEW "viewProperties" AS
 SELECT list."Code",
@@ -250,12 +251,6 @@ FROM "ListPoints" list
          LEFT OUTER JOIN "Areas" area ON city."Area_id" = area.id
          LEFT OUTER JOIN "Countries" cnr ON cnr."CountryCode" = area."CountryCode";
 
-CREATE VIEW "viewMetro" AS
-SELECT list."Code", list."ZipCode", "Metro"."MetroName", city."Name" as "CityName", city."Settlement"
-FROM "ListPoints" list
-         LEFT OUTER JOIN "Metro" ON list."Metro_id" = "Metro".id
-         LEFT OUTER JOIN "Cities" city ON city.id = "Metro"."City_id";
-
 CREATE VIEW "viewWorkShedule" AS
 SELECT wsh.*, list."Code", list."ZipCode"
 FROM "ListPoints" list
@@ -271,11 +266,6 @@ SELECT gps.*, list."Code", list."ZipCode"
 FROM "ListPoints" list
          LEFT OUTER JOIN "GPS" gps ON list."GPS_id" = gps.id;
 
-CREATE VIEW "viewPhotos" AS
-SELECT photo."PhotoBase64", list."Code", list."ZipCode"
-FROM "Photos" photo
-         LEFT OUTER JOIN "ListPoints" list ON photo."ListPoint_id" = list.id;
-
 CREATE VIEW "viewListPointsShort" AS
 SELECT "Code", "TerminalCode", "Name", "Organization", "ZipCode", "UpdateDate"
 FROM "ListPoints";
@@ -288,7 +278,6 @@ SELECT list."Code",
        list."ZipCode",
        list."Area_id",
        list."City_id",
-       list."Metro_id",
        list."Address_id",
        list."GPS_id",
        list."Property_id",
@@ -360,7 +349,6 @@ SELECT list."Code",
        area."Name" AS "AreaName",
        city."Name" AS "CityName",
        city."Settlement",
-       metro."MetroName",
        gps."latitude",
        gps."longitude"
 FROM "ListPoints" list
@@ -370,6 +358,5 @@ FROM "ListPoints" list
          LEFT OUTER JOIN "Countries" ctr ON list."CountryCode" = ctr."CountryCode"
          LEFT OUTER JOIN "Areas" area ON list."Area_id" = area.id
          LEFT OUTER JOIN "Cities" city ON list."City_id" = city.id
-         LEFT OUTER JOIN "Metro" metro ON list."Metro_id" = metro.id
          LEFT OUTER JOIN "GPS" gps ON list."GPS_id" = gps.id
 ;

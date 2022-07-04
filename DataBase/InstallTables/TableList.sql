@@ -34,7 +34,7 @@ CREATE TABLE "Countries"
 
 CREATE TABLE "Addresses"
 (
-    id                serial NOT NULL,
+    id                serial  NOT NULL,
     "Street"          character varying(150),
     "House"           character varying(110),
     "Structure"       character varying(110),
@@ -43,6 +43,7 @@ CREATE TABLE "Addresses"
     "AddressFull"     text,
     "AddressReduce"   text,
     "TripDescription" text,
+    "Cities_id"       integer NOT NULL,
     CONSTRAINT "Addresses_pkey" PRIMARY KEY (id)
 );
 
@@ -197,6 +198,10 @@ ALTER TABLE "Cities"
 ALTER TABLE "Metro"
     ADD CONSTRAINT "Metro_ListPoints_id_fkey"
         FOREIGN KEY ("ListPoints_id") REFERENCES "ListPoints" (id);
+
+ALTER TABLE "Addresses"
+    ADD CONSTRAINT "Addresses_Cities_id_fkey"
+        FOREIGN KEY ("Cities_id") REFERENCES "Cities" (id);
 
 CREATE VIEW "viewProperties" AS
 SELECT list."Code",

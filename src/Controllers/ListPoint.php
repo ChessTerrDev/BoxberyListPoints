@@ -17,12 +17,176 @@ use BoxberryListPoints\Models\{
 
 class ListPoint
 {
-    public function __construct()
+    /**
+     * @param string $city
+     * @param string $street
+     * @param string|null $house
+     * @param string|null $structure
+     * @param string|null $housing
+     * @param string|null $apartment
+     * @return array
+     * @throws \Exception
+     */
+    public static function findPointByAddress(
+        string $city,
+        string $street,
+        ?string $house = null,
+        ?string $structure = null,
+        ?string $housing = null,
+        ?string $apartment = null
+    ): array
     {
+        $dataBase = new DataBase();
 
+        $cityModel = new CityModel();
+        $cityModel
+            ->setDataBase($dataBase)
+            ->setName($city);
+        $resultCityFind = $cityModel->find();
+        if (empty($resultCityFind)) return [];
+
+
+        $address = new AddressModel();
+        $address
+            ->setDataBase($dataBase)
+            ->setCitiesId($cityModel->getId())
+            ->setStreet($street);
+
+        if ($house) $address->setHouse($house);
+        if ($structure) $address->setStructure($structure);
+        if ($housing) $address->setHousing($housing);
+        if ($apartment) $address->setApartment($apartment);
+
+        $results = $address->find();
+        if (!empty($results))
+            return static::findPointsByFieldId('setAddressId', $results, $dataBase);
+
+        return [];
     }
 
-    public function addPoint(array $pointDescription): ListPointModel
+
+    /**
+     * @param string $code
+     * @return bool|array
+     * @throws \Exception
+     */
+    public static function findPointByCode(string $code): bool | array
+    {
+        $PointModel = new ListPointModel();
+
+        return $PointModel
+            ->setCode($code)
+            ->find();
+    }
+
+    /**
+     * @param int $id
+     * @return \BoxberryListPoints\Models\ListPoints
+     */
+    public static function findPointById(int $id): \BoxberryListPoints\Models\ListPoints
+    {
+        $PointModel = new ListPointModel($id);
+        return $PointModel;
+    }
+
+    /**
+     * @param int $ZipCode
+     * @return bool|array
+     * @throws \Exception
+     */
+    public static function findPointByZipCode(int $ZipCode): bool|array
+    {
+        $PointModel = new ListPointModel();
+
+        return $PointModel
+            ->setZipCode($ZipCode)
+            ->find();
+    }
+
+    /**
+     * @param $city
+     * @return array
+     * @throws \Exception
+     */
+    public static function findPointByCityName($city): array
+    {
+        $dataBase = new DataBase();
+
+        $cityModel = new CityModel();
+        $cityModel
+            ->setName($city);
+        $results = $cityModel->find();
+
+        if (!empty($results))
+            return static::findPointsByFieldId('setCityId', $results, $dataBase);
+
+        return [];
+    }
+
+    /**
+     * @param $settlement
+     * @return array
+     * @throws \Exception
+     */
+    public static function findPointBySettlement($settlement): array
+    {
+        $dataBase = new DataBase();
+
+        $cityModel = new CityModel();
+        $cityModel
+            ->setDataBase($dataBase)
+            ->setSettlement($settlement);
+        $results = $cityModel->find();
+
+        if (!empty($results))
+            return static::findPointsByFieldId('setCityId', $results, $dataBase);
+
+        return [];
+    }
+
+    /**
+     * @param float $latitude
+     * @param float $longitude
+     * @param int $radius
+     * @return array
+     */
+    public static function findPointByGPS(float $latitude, float $longitude, int $radius): array
+    {
+        return [];
+    }
+
+    /**
+     * @param string $fieldSetter
+     * @param array $results
+     * @param \BoxberryListPoints\Models\DataBase $dataBase
+     * @return array
+     * @throws \Exception
+     */
+    protected static function findPointsByFieldId(string $fieldSetter, array $results, DataBase $dataBase): array
+    {
+        $PointModel = new ListPointModel();
+        if (!method_exists($PointModel, $fieldSetter))
+            throw new \Exception('Переден некоректный метод');
+
+        $list = [];
+        foreach ($results as $resultName => $result) {
+            $Point = clone $PointModel;
+            $Point->setDataBase($dataBase);
+            $resultPoint = $Point
+                ->$fieldSetter($result->getId())
+                ->find();
+            unset($results[$resultName]);
+            $list = array_merge($list, $resultPoint);
+        }
+        return  $list;
+    }
+
+    /**
+     * @param array $pointDescription
+     * @return \BoxberryListPoints\Models\ListPoints
+     * @throws \Exception
+     */
+    public static function addPoint(array $pointDescription): ListPointModel
     {
         $dataBase = new DataBase();
         $dataBase->beginTransaction();
@@ -38,7 +202,7 @@ class ListPoint
             $area = new AreaModel();
             $area
                 ->setDataBase($dataBase)
-                ->setCountryCode((int)$pointDescription['CountryCode'])
+                ->setCountryCode($countries->getCountryCode())
                 ->setName($pointDescription['Area']);
             $resultAreaFind = $area->find();
             $area = !empty($resultAreaFind) ? $resultAreaFind[0] : $area->addEntryInDataBase();
@@ -57,7 +221,8 @@ class ListPoint
             $address
                 ->setDataBase($dataBase)
                 ->setFields($pointDescription)
-                ->setAddressFull($pointDescription['Address']);
+                ->setAddressFull($pointDescription['Address'])
+                ->setCitiesId($city->getId());
             $address->addEntryInDataBase();
 
             $workShedule = new WorkSheduleModel();
@@ -93,7 +258,7 @@ class ListPoint
                 ->setName($pointDescription['Name'])
                 ->setOrganization($pointDescription['Organization'])
                 ->setZipCode($pointDescription['ZipCode'])
-                ->setCountryCode((int)$pointDescription['CountryCode'])
+                ->setCountryCode($countries->getCountryCode())
                 ->setAreaId($area->getId())
                 ->setCityId($city->getId())
                 ->setGPSId($GPS->getId())
@@ -138,13 +303,6 @@ class ListPoint
         return $Point;
     }
 
-    public function findPointShort()
-    {
 
-    }
 
-    public function findPoint()
-    {
-
-    }
 }

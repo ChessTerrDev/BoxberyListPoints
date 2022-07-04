@@ -28,12 +28,21 @@ class ListPoint
         $dataBase->beginTransaction();
 
         try {
+            $countries = new \BoxberryListPoints\Models\Countries();
+            $countries
+                ->setCountryCode((int)$pointDescription['CountryCode'])
+                ->setCountryName($pointDescription['Country']);
+            $resultCountriesFind = $countries->find();
+            $countries = !empty($resultCountriesFind) ? $resultCountriesFind[0] : $countries->addEntryInDataBase(null, null);
+
             $area = new AreaModel();
             $area
                 ->setDataBase($dataBase)
                 ->setCountryCode((int)$pointDescription['CountryCode'])
                 ->setName($pointDescription['Area']);
-            $area->addEntryInDataBase();
+            $resultAreaFind = $area->find();
+            $area = !empty($resultAreaFind) ? $resultAreaFind[0] : $area->addEntryInDataBase();
+
 
             $city = new CityModel();
             $city
@@ -41,16 +50,8 @@ class ListPoint
                 ->setName($pointDescription['CityName'])
                 ->setSettlement($pointDescription['Settlement'])
                 ->setAreaId($area->getId());
-            $city->addEntryInDataBase();
-
-            if (!empty($pointDescription['Metro'])) {
-                $metro = new MetroModel();
-                $metro
-                    ->setDataBase($dataBase)
-                    ->setMetroName($pointDescription['Metro'])
-                    ->setCityId($city->getId());
-                $metro->addEntryInDataBase();
-            }
+            $resultCityFind = $city->find();
+            $city = !empty($resultCityFind) ? $resultCityFind[0] : $city->addEntryInDataBase();
 
             $address = new AddressModel();
             $address
@@ -67,17 +68,14 @@ class ListPoint
                 ->setShortWorkShedule($pointDescription['WorkShedule']);
             $workShedule->addEntryInDataBase();
 
-            if (!empty($pointDescription['GPS'])) {
-
-                list($latitude, $longitude) = explode(',', $pointDescription['GPS']);
-
-                $GPS = new GPSModel();
-                $GPS
-                    ->setDataBase($dataBase)
-                    ->setLatitude((float)$latitude)
-                    ->setLongitude((float)$longitude);
-                $GPS->addEntryInDataBase();
-            }
+            if (empty($pointDescription['GPS'])) $pointDescription['GPS'] = '0, 0';
+            list($latitude, $longitude) = explode(',', $pointDescription['GPS']);
+            $GPS = new GPSModel();
+            $GPS
+                ->setDataBase($dataBase)
+                ->setLatitude((float)$latitude ?? 0)
+                ->setLongitude((float)$longitude ?? 0);
+            $GPS->addEntryInDataBase();
 
             $properties = new PropertiesModel();
             $properties
@@ -97,15 +95,8 @@ class ListPoint
                 ->setZipCode($pointDescription['ZipCode'])
                 ->setCountryCode((int)$pointDescription['CountryCode'])
                 ->setAreaId($area->getId())
-                ->setCityId($city->getId());
-
-            if (isset($metro))
-                $Point->setMetroId($metro->getId());
-
-            if (isset($metro))
-                $Point->setGPSId($GPS->getId());
-
-            $Point
+                ->setCityId($city->getId())
+                ->setGPSId($GPS->getId())
                 ->setAddressId($address->getId())
                 ->setPropertyId($properties->getId())
                 ->setPhone($pointDescription['Phone'])
@@ -115,6 +106,16 @@ class ListPoint
                 ->setDeleted(false);
 
             $Point->addEntryInDataBase();
+
+            if (!empty($pointDescription['Metro'])) {
+                $metro = new MetroModel();
+                $metro
+                    ->setDataBase($dataBase)
+                    ->setMetroName($pointDescription['Metro'])
+                    ->setCityId($city->getId())
+                    ->setListPointsId($Point->getId());
+                $metro->addEntryInDataBase();
+            }
 
             if (!empty($pointDescription['photoLinks'])) {
                 foreach ($pointDescription['photoLinks'] as $photoLink) {
@@ -135,5 +136,15 @@ class ListPoint
         $dataBase->commit();
 
         return $Point;
+    }
+
+    public function findPointShort()
+    {
+
+    }
+
+    public function findPoint()
+    {
+
     }
 }

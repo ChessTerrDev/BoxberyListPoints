@@ -9,11 +9,18 @@ require_once __DIR__.'/../../vendor/autoload.php';
 
 use BoxberryListPoints\Libs\MultiProcessing;
 use BoxberryListPoints\Libs\Logger;
+use BoxberryListPoints\Controllers\Update\ListPoints\ListPoints;
+
+
+$listPoints = new ListPoints();
+//$listPoints->loadFullListPoints();
+//$listPoints->loadCityListPoints(643, '77400');
+$listPoints->loadCountryListPoints(643);
 
 
 
 $scriptPath = __DIR__ . '/Worker.php';
-$param = json_decode(file_get_contents(\BoxberryListPoints\Configuration\Constants::TMP_PATH.'ListPoints.json'), true);
+$params = $listPoints->toArray();
 
 $startCallbackFunction = function ($message) {
     echo "The script is running: $message  \n";
@@ -26,11 +33,12 @@ $finishCallbackFunction = function ($message) {
         ->addLogInfo("The script is completed: $message \n");
 };
 
-$multiProcessing = new MultiProcessing($scriptPath, $param);
+$multiProcessing = new MultiProcessing($scriptPath, $params);
 $multiProcessing
     ->setSumOfProcesses(10)
     ->setStartCallbackFunction($startCallbackFunction)
     ->setFinishCallbackFunction($finishCallbackFunction);
 
 $multiProcessing->run();
+
 

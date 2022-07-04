@@ -81,19 +81,8 @@ class DataBase
         if (empty($table) || empty($id))
             throw new \Exception('Не указанна таблица или идентификатор записи!');
 
-        $query = 'SELECT';
-        $tableFields = '';
-        if (!empty($fields))
-            foreach ($fields as $nameField => $field) {
-                $tableFields .= '"'.$nameField.'"';
-                if ($nameField !== array_key_last($fields))
-                    $tableFields .= ', ';
-            };
+        list($query, $tableFields) = $this->extracted($fields, $table);
 
-        $query .= empty($tableFields) ? ' * ' : $tableFields;
-        $query .= ' FROM ';
-        $query .= ' "'.$table.'" ';
-        $query .= ' WHERE ';
         $query .= ' "id" = ?';
 
         $statement = $this->dataBaseHost->prepare($query);
@@ -101,6 +90,28 @@ class DataBase
 
         return $statement->fetch(PDO::FETCH_ASSOC);
     }
+
+    public function findByParams(string $table, array $params, ?array $fields = null)
+    {
+        if (empty($table) || empty($params))
+            throw new \Exception('Не указанна таблица или параметры поиска!');
+
+        list($query, $tableFields) = $this->extracted($fields, $table);
+
+        $bindValues = [];
+        foreach ($params as $paramName => $param) {
+            $query .= ' "'.$paramName.'" = :'. $paramName;
+            $bindValues[$paramName] = $param;
+            if ($paramName !== array_key_last($params))
+                $query .= ' AND ';
+        }
+
+        $statement = $this->dataBaseHost->prepare($query);
+        $statement->execute($bindValues);
+
+        return $statement->fetchAll(PDO::FETCH_ASSOC);
+    }
+
 
     public function beginTransaction()
     {
@@ -116,4 +127,28 @@ class DataBase
     {
         $this->dataBaseHost->rollBack();
     }
+
+    /**
+     * @param array|null $fields
+     * @param string $table
+     * @return string[]
+     */
+    private function extracted(?array $fields, string $table): array
+    {
+        $query = 'SELECT';
+        $tableFields = '';
+        if (!empty($fields))
+            foreach ($fields as $nameField => $field) {
+                $tableFields .= '"' . $nameField . '"';
+                if ($nameField !== array_key_last($fields))
+                    $tableFields .= ', ';
+            };
+
+        $query .= empty($tableFields) ? ' * ' : $tableFields;
+        $query .= ' FROM ';
+        $query .= ' "' . $table . '" ';
+        $query .= ' WHERE ';
+        return array($query, $tableFields);
+    }
+
 }

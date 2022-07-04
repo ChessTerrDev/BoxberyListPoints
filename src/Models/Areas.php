@@ -23,6 +23,14 @@ class Areas extends AbstractModel
     }
 
     /**
+     * @param int|null $id
+     */
+    protected function setId(?int $id): void
+    {
+        $this->id = $id;
+    }
+
+    /**
      * @return string|null
      */
     public function getName(): ?string

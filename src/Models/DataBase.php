@@ -101,6 +101,9 @@ class DataBase
         $bindValues = [];
         foreach ($params as $paramName => $param) {
             $query .= ' "'.$paramName.'" = :'. $paramName;
+
+            if (is_bool($param)) $param = $param ? 1 : 0;
+
             $bindValues[$paramName] = $param;
             if ($paramName !== array_key_last($params))
                 $query .= ' AND ';

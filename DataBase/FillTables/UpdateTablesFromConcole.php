@@ -27,14 +27,6 @@ $listPoints->loadFullListPoints();
 $param = $listPoints->toArray();
 
 
-print_r(count($param));
-echo "\n";
-print_r(count($listPointsFromBD));
-echo "\n";
-print_r(count($listUpdateDate));
-echo "\n";
-
-
 // Оставляем только те записи которых нет в нашей базе или другая дата обновления
 $listPointsToUpdate = [];
 foreach ($param as $key => $point) {
@@ -48,8 +40,6 @@ foreach ($param as $key => $point) {
 unset($listUpdateDate);
 unset($param);
 
-print_r($listPointsToUpdate);
-echo "\n";
 
 
 $scriptPath = __DIR__ . '/Worker.php';

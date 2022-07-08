@@ -29,7 +29,6 @@ $description = $pointDescription
 
 $description['UpdateDate'] = $updateDate ? preg_replace("/\s\d{2}:\d{2}:\d{2}/", '', str_replace('"', '', $updateDate)) : date('Y-m-d');
 
-var_dump($description);
 /**
  * Добавляем запись в БД
  */

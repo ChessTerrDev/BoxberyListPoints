@@ -4,23 +4,23 @@ namespace BoxberryListPoints\Models;
 
 class ListPoints extends AbstractModel
 {
-    protected ?int $id;
-    protected string $Code;
-    protected string $TerminalCode;
-    protected string $Name;
-    protected string $Organization;
-    protected int    $ZipCode;
-    protected int    $CountryCode;
-    protected int    $Area_id;
-    protected int    $City_id;
-    protected int    $Address_id;
-    protected int    $GPS_id;
-    protected int    $Property_id;
-    protected string $Phone;
-    protected int    $WorkShedule_id;
-    protected string $UpdateDate;
-    protected bool   $Active  = true;
-    protected bool   $Deleted = false;
+    protected ?int     $id;
+    protected string   $Code;
+    protected string   $TerminalCode;
+    protected string   $Name;
+    protected string   $Organization;
+    protected int      $ZipCode;
+    protected int      $CountryCode;
+    protected string   $Phone;
+    public Areas       $Area;
+    public Cities      $City;
+    public Addresses   $Address;
+    public GPS         $GPS;
+    public Properties  $Properties;
+    public WorkShedule $WorkShedule;
+    protected string   $UpdateDate;
+    protected bool     $Active  = true;
+    protected bool     $Deleted = false;
 
     public function __construct(?int $id = null)
     {
@@ -152,96 +152,6 @@ class ListPoints extends AbstractModel
         return $this;
     }
 
-    /**
-     * @return int
-     */
-    public function getAreaId(): int
-    {
-        return $this->Area_id;
-    }
-
-    /**
-     * @param int $Area_id
-     * @return ListPoints
-     */
-    public function setAreaId(int $Area_id): ListPoints
-    {
-        $this->Area_id = $Area_id;
-        return $this;
-    }
-
-    /**
-     * @return int
-     */
-    public function getCityId(): int
-    {
-        return $this->City_id;
-    }
-
-    /**
-     * @param int $City_id
-     * @return ListPoints
-     */
-    public function setCityId(int $City_id): ListPoints
-    {
-        $this->City_id = $City_id;
-        return $this;
-    }
-
-
-    /**
-     * @return int
-     */
-    public function getAddressId(): int
-    {
-        return $this->Address_id;
-    }
-
-    /**
-     * @param int $Address_id
-     * @return ListPoints
-     */
-    public function setAddressId(int $Address_id): ListPoints
-    {
-        $this->Address_id = $Address_id;
-        return $this;
-    }
-
-    /**
-     * @return int
-     */
-    public function getGPSId(): int
-    {
-        return $this->GPS_id;
-    }
-
-    /**
-     * @param int $GPS_id
-     * @return ListPoints
-     */
-    public function setGPSId(int $GPS_id): ListPoints
-    {
-        $this->GPS_id = $GPS_id;
-        return $this;
-    }
-
-    /**
-     * @return int
-     */
-    public function getPropertyId(): int
-    {
-        return $this->Property_id;
-    }
-
-    /**
-     * @param int $Property_id
-     * @return ListPoints
-     */
-    public function setPropertyId(int $Property_id): ListPoints
-    {
-        $this->Property_id = $Property_id;
-        return $this;
-    }
 
     /**
      * @return string
@@ -262,22 +172,59 @@ class ListPoints extends AbstractModel
     }
 
     /**
-     * @return int
+     * @param \BoxberryListPoints\Models\Areas $Area
      */
-    public function getWorkSheduleId(): int
+    public function setArea(Areas $Area): static
     {
-        return $this->WorkShedule_id;
+        $this->Area = $Area;
+        return $this;
     }
 
     /**
-     * @param int $WorkShedule_id
-     * @return ListPoints
+     * @param \BoxberryListPoints\Models\Cities $City
      */
-    public function setWorkSheduleId(int $WorkShedule_id): ListPoints
+    public function setCity(Cities $City): static
     {
-        $this->WorkShedule_id = $WorkShedule_id;
+        $this->City = $City;
         return $this;
     }
+
+    /**
+     * @param \BoxberryListPoints\Models\Addresses $Address
+     */
+    public function setAddress(Addresses $Address): static
+    {
+        $this->Address = $Address;
+        return $this;
+    }
+
+    /**
+     * @param \BoxberryListPoints\Models\GPS $GPS
+     */
+    public function setGPS(GPS $GPS): static
+    {
+        $this->GPS = $GPS;
+        return $this;
+    }
+
+    /**
+     * @param \BoxberryListPoints\Models\Properties $Properties
+     */
+    public function setProperties(Properties $Properties): static
+    {
+        $this->Properties = $Properties;
+        return $this;
+    }
+
+    /**
+     * @param \BoxberryListPoints\Models\WorkShedule $WorkShedule
+     */
+    public function setWorkShedule(WorkShedule $WorkShedule): static
+    {
+        $this->WorkShedule = $WorkShedule;
+        return $this;
+    }
+
 
     /**
      * @return string
@@ -331,5 +278,83 @@ class ListPoints extends AbstractModel
     {
         $this->Deleted = $Deleted;
         return $this;
+    }
+
+    /**
+     * @param $value
+     * @return mixed
+     */
+    public function getValueField($value, $field = null): mixed
+    {
+        $arrayModels = ['Area' => 'Areas', 'City' => 'Cities', 'Address' => 'Addresses', 'GPS' => 'GPS', 'Properties' => 'Properties', 'WorkShedule' => 'WorkShedule'];
+        if (property_exists($this, $field) && isset($arrayModels[$field])) {
+            $class = '\BoxberryListPoints\Models\\' .$arrayModels[$field];
+            return new $class($value);
+        }
+
+        return $value;
+    }
+
+
+    /**
+     * @return array|null
+     * @throws \Exception
+     */
+    public function getPhotos(): ?array
+    {
+        if ($this->id) {
+            $PhotosModel = new \BoxberryListPoints\Models\Photos();
+            return $PhotosModel
+                ->setListPointId($this->id)
+                ->find();
+        }
+        return null;
+    }
+
+    /**
+     *
+     * @return array|null
+     * @throws \Exception
+     */
+    public function getMetro(): ?array
+    {
+        if ($this->id) {
+            $MetroModel = new \BoxberryListPoints\Models\Metro();
+            return $MetroModel
+                ->setListPointsId($this->id)
+                ->find();
+        }
+        return null;
+    }
+
+    /**
+     * Returns object parameters (which are not a model) and saves the states of child models
+     * @return array
+     */
+    protected function getFieldsForSave(): array
+    {
+        $arrayModels = ['Area', 'City', 'Address', 'GPS', 'Properties', 'WorkShedule'];
+        $params = parent::getFieldsForSave();
+
+        foreach ($params as $paramName => $param)
+            if (in_array($paramName, $arrayModels) && is_object($this->$paramName) && method_exists($this->$paramName, 'save')){
+                $this->$paramName->save();
+                unset($params[$paramName]);
+            };
+
+        return $params;
+    }
+
+    /**
+     * Saves the entity's "deleted" status
+     * @return bool
+     * @throws \Exception
+     */
+    public function setDelete(): bool
+    {
+        $param = ['Deleted' => true, 'Active' => false];
+        return $this
+            ->initDataBase()
+            ->updateEntryById($this->baseName(), $this->getId(), $param);
     }
 }

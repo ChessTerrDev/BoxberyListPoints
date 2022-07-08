@@ -36,7 +36,7 @@ class Properties extends AbstractModel
      * @param $value
      * @return string|null
      */
-    public function getValueField($value): mixed
+    public function getValueField($value, $field = null): mixed
     {
         return $value;
     }

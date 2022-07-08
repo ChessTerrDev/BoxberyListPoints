@@ -77,9 +77,10 @@ class Metro extends AbstractModel
     /**
      * @param int $ListPoints_id
      */
-    public function setListPointsId(int $ListPoints_id): void
+    public function setListPointsId(int $ListPoints_id)
     {
         $this->ListPoints_id = $ListPoints_id;
+        return $this;
     }
 
 }

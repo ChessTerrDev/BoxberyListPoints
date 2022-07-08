@@ -17,168 +17,20 @@ use BoxberryListPoints\Models\{
 
 class ListPoint
 {
-    /**
-     * @param string $city
-     * @param string $street
-     * @param string|null $house
-     * @param string|null $structure
-     * @param string|null $housing
-     * @param string|null $apartment
-     * @return array
-     * @throws \Exception
-     */
-    public static function findPointByAddress(
-        string $city,
-        string $street,
-        ?string $house = null,
-        ?string $structure = null,
-        ?string $housing = null,
-        ?string $apartment = null
-    ): array
-    {
-        $dataBase = new DataBase();
-
-        $cityModel = new CityModel();
-        $cityModel
-            ->setDataBase($dataBase)
-            ->setName($city);
-        $resultCityFind = $cityModel->find();
-        if (empty($resultCityFind)) return [];
-
-
-        $address = new AddressModel();
-        $address
-            ->setDataBase($dataBase)
-            ->setCitiesId($cityModel->getId())
-            ->setStreet($street);
-
-        if ($house) $address->setHouse($house);
-        if ($structure) $address->setStructure($structure);
-        if ($housing) $address->setHousing($housing);
-        if ($apartment) $address->setApartment($apartment);
-
-        $results = $address->find();
-        if (!empty($results))
-            return static::findPointsByFieldId('setAddressId', $results, $dataBase);
-
-        return [];
-    }
-
 
     /**
      * @param string $code
-     * @return bool|array
+     * @return \BoxberryListPoints\Models\ListPoints|bool
      * @throws \Exception
      */
-    public static function findPointByCode(string $code): bool | array
+    public static function findPointByCode(string $code): ListPointModel | bool
     {
         $PointModel = new ListPointModel();
-
-        return $PointModel
+        $listPoints = $PointModel
             ->setCode($code)
             ->find();
-    }
 
-    /**
-     * @param int $id
-     * @return \BoxberryListPoints\Models\ListPoints
-     */
-    public static function findPointById(int $id): \BoxberryListPoints\Models\ListPoints
-    {
-        $PointModel = new ListPointModel($id);
-        return $PointModel;
-    }
-
-    /**
-     * @param int $ZipCode
-     * @return bool|array
-     * @throws \Exception
-     */
-    public static function findPointByZipCode(int $ZipCode): bool|array
-    {
-        $PointModel = new ListPointModel();
-
-        return $PointModel
-            ->setZipCode($ZipCode)
-            ->find();
-    }
-
-    /**
-     * @param $city
-     * @return array
-     * @throws \Exception
-     */
-    public static function findPointByCityName($city): array
-    {
-        $dataBase = new DataBase();
-
-        $cityModel = new CityModel();
-        $cityModel
-            ->setName($city);
-        $results = $cityModel->find();
-
-        if (!empty($results))
-            return static::findPointsByFieldId('setCityId', $results, $dataBase);
-
-        return [];
-    }
-
-    /**
-     * @param $settlement
-     * @return array
-     * @throws \Exception
-     */
-    public static function findPointBySettlement($settlement): array
-    {
-        $dataBase = new DataBase();
-
-        $cityModel = new CityModel();
-        $cityModel
-            ->setDataBase($dataBase)
-            ->setSettlement($settlement);
-        $results = $cityModel->find();
-
-        if (!empty($results))
-            return static::findPointsByFieldId('setCityId', $results, $dataBase);
-
-        return [];
-    }
-
-    /**
-     * @param float $latitude
-     * @param float $longitude
-     * @param int $radius
-     * @return array
-     */
-    public static function findPointByGPS(float $latitude, float $longitude, int $radius): array
-    {
-        return [];
-    }
-
-    /**
-     * @param string $fieldSetter
-     * @param array $results
-     * @param \BoxberryListPoints\Models\DataBase $dataBase
-     * @return array
-     * @throws \Exception
-     */
-    protected static function findPointsByFieldId(string $fieldSetter, array $results, DataBase $dataBase): array
-    {
-        $PointModel = new ListPointModel();
-        if (!method_exists($PointModel, $fieldSetter))
-            throw new \Exception('Переден некоректный метод');
-
-        $list = [];
-        foreach ($results as $resultName => $result) {
-            $Point = clone $PointModel;
-            $Point->setDataBase($dataBase);
-            $resultPoint = $Point
-                ->$fieldSetter($result->getId())
-                ->find();
-            unset($results[$resultName]);
-            $list = array_merge($list, $resultPoint);
-        }
-        return  $list;
+        return $listPoints[0] ?? false;
     }
 
     /**
@@ -188,6 +40,14 @@ class ListPoint
      */
     public static function addPoint(array $pointDescription): ListPointModel
     {
+        $Point = static::findPointByCode($pointDescription['extraCode']);
+        if ($Point) {
+            $result = static::updatePoint($Point, $pointDescription);
+            if (!$result)
+                throw new \Exception('Error updatePoint');
+            return $result;
+        }
+
         $dataBase = new DataBase();
         $dataBase->beginTransaction();
 
@@ -197,99 +57,103 @@ class ListPoint
                 ->setCountryCode((int)$pointDescription['CountryCode'])
                 ->setCountryName($pointDescription['Country']);
             $resultCountriesFind = $countries->find();
-            $countries = !empty($resultCountriesFind) ? $resultCountriesFind[0] : $countries->addEntryInDataBase(null, null);
+            !empty($resultCountriesFind) ? $countries = $resultCountriesFind[0] : $countries->addEntry(null, null);
 
             $area = new AreaModel();
             $area
-                ->setDataBase($dataBase)
+                ->initDataBase($dataBase);
+            $area
                 ->setCountryCode($countries->getCountryCode())
                 ->setName($pointDescription['Area']);
             $resultAreaFind = $area->find();
-            $area = !empty($resultAreaFind) ? $resultAreaFind[0] : $area->addEntryInDataBase();
+            $area = !empty($resultAreaFind) ? $resultAreaFind[0] : $area->addEntry();
 
 
             $city = new CityModel();
             $city
-                ->setDataBase($dataBase)
+                ->initDataBase($dataBase);
+            $city
                 ->setName($pointDescription['CityName'])
                 ->setSettlement($pointDescription['Settlement'])
                 ->setAreaId($area->getId());
             $resultCityFind = $city->find();
-            $city = !empty($resultCityFind) ? $resultCityFind[0] : $city->addEntryInDataBase();
+            $city = !empty($resultCityFind) ? $resultCityFind[0] : $city->addEntry();
 
             $address = new AddressModel();
             $address
-                ->setDataBase($dataBase)
+                ->initDataBase($dataBase);
+            $address
                 ->setFields($pointDescription)
                 ->setAddressFull($pointDescription['Address'])
                 ->setCitiesId($city->getId());
-            $address->addEntryInDataBase();
-
-            $workShedule = new WorkSheduleModel();
-            $workShedule
-                ->setDataBase($dataBase)
-                ->setFields($pointDescription)
-                ->setScheduleJSON($pointDescription['schedule'])
-                ->setShortWorkShedule($pointDescription['WorkShedule']);
-            $workShedule->addEntryInDataBase();
+            $address->addEntry();
 
             if (empty($pointDescription['GPS'])) $pointDescription['GPS'] = '0, 0';
             list($latitude, $longitude) = explode(',', $pointDescription['GPS']);
             $GPS = new GPSModel();
             $GPS
-                ->setDataBase($dataBase)
+                ->initDataBase($dataBase);
+            $GPS
                 ->setLatitude((float)$latitude ?? 0)
                 ->setLongitude((float)$longitude ?? 0);
-            $GPS->addEntryInDataBase();
+            $GPS->addEntry();
 
-            $properties = new PropertiesModel();
-            $properties
-                ->setDataBase($dataBase)
+            $Properties = new PropertiesModel();
+            $Properties->initDataBase($dataBase);
+            $Properties
                 ->setFields($pointDescription)
-                ->setNalKD($pointDescription['CourierDelivery']);
-            $properties->addEntryInDataBase();
-
+                ->setNalKD($pointDescription['CourierDelivery'])
+                ->addEntry();
+            $WorkShedule = new WorkSheduleModel();
+            $WorkShedule->initDataBase($dataBase);
+            $WorkShedule
+                ->setFields($pointDescription)
+                ->setScheduleJSON($pointDescription['schedule'])
+                ->setShortWorkShedule($pointDescription['WorkShedule'])
+                ->addEntry();
 
             $Point = new ListPointModel();
+            $Point->initDataBase($dataBase);
             $Point
-                ->setDataBase($dataBase)
                 ->setCode($pointDescription['extraCode'])
                 ->setTerminalCode($pointDescription['TerminalCode'])
                 ->setName($pointDescription['Name'])
                 ->setOrganization($pointDescription['Organization'])
                 ->setZipCode($pointDescription['ZipCode'])
                 ->setCountryCode($countries->getCountryCode())
-                ->setAreaId($area->getId())
-                ->setCityId($city->getId())
-                ->setGPSId($GPS->getId())
-                ->setAddressId($address->getId())
-                ->setPropertyId($properties->getId())
                 ->setPhone($pointDescription['Phone'])
-                ->setWorkSheduleId($workShedule->getId())
-                ->setUpdateDate(date("Y-m-d"))
+                ->setArea($area)
+                ->setCity($city)
+                ->setGPS($GPS)
+                ->setAddress($address)
+                ->setProperties($Properties)
+                ->setWorkShedule($WorkShedule)
+                ->setUpdateDate($pointDescription['UpdateDate'])
                 ->setActive(true)
                 ->setDeleted(false);
 
-            $Point->addEntryInDataBase();
+            $Point->addEntry();
 
             if (!empty($pointDescription['Metro'])) {
                 $metro = new MetroModel();
                 $metro
-                    ->setDataBase($dataBase)
+                    ->initDataBase($dataBase);
+                $metro
                     ->setMetroName($pointDescription['Metro'])
                     ->setCityId($city->getId())
                     ->setListPointsId($Point->getId());
-                $metro->addEntryInDataBase();
+                $metro->addEntry();
             }
 
             if (!empty($pointDescription['photoLinks'])) {
                 foreach ($pointDescription['photoLinks'] as $photoLink) {
                     $photo = new PhotoModel();
                     $photo
-                        ->setDataBase($dataBase)
+                        ->initDataBase($dataBase);
+                    $photo
                         ->setPhotoLink((string)$photoLink)
                         ->setListPointId($Point->getId());
-                    $photo->addEntryInDataBase();
+                    $photo->addEntry();
                 }
             }
 
@@ -303,6 +167,75 @@ class ListPoint
         return $Point;
     }
 
+    /**
+     * @param \BoxberryListPoints\Models\ListPoints $Point
+     * @param array $pointDescription
+     * @return bool|\BoxberryListPoints\Models\ListPoints
+     * @throws \Exception
+     */
+    public static function updatePoint(ListPointModel $Point, array $pointDescription): bool|ListPointModel
+    {
+        $dataBase = new DataBase();
+        $dataBase->beginTransaction();
+
+        try {
+            $countries = new \BoxberryListPoints\Models\Countries();
+            $countries
+                ->setCountryCode((int)$pointDescription['CountryCode'])
+                ->setCountryName($pointDescription['Country']);
+            $resultCountriesFind = $countries->find();
+            !empty($resultCountriesFind) ? $countries = $resultCountriesFind[0] : $countries->addEntry(null, null);
+
+            $Point->initDataBase($dataBase);
+            $Point
+                ->setTerminalCode($pointDescription['TerminalCode'])
+                ->setName($pointDescription['Name'])
+                ->setOrganization($pointDescription['Organization'])
+                ->setZipCode($pointDescription['ZipCode'])
+                ->setCountryCode($countries->getCountryCode())
+                ->setPhone($pointDescription['Phone']);
+            $Point->Area
+                ->setCountryCode($countries->getCountryCode())
+                ->setName($pointDescription['Area']);
+            $Point->City
+                ->setName($pointDescription['CityName'])
+                ->setSettlement($pointDescription['Settlement']);
+            $Point
+                ->Address
+                ->setFields($pointDescription)
+                ->setAddressFull($pointDescription['Address']);
+            $Point
+                ->Properties
+                ->setFields($pointDescription)
+                ->setNalKD($pointDescription['CourierDelivery']);
+            $Point
+                ->WorkShedule
+                ->setFields($pointDescription)
+                ->setScheduleJSON($pointDescription['schedule'])
+                ->setShortWorkShedule($pointDescription['WorkShedule']);
+            $Point
+                ->setUpdateDate($pointDescription['UpdateDate'])
+                ->setActive(true)
+                ->setDeleted(false);
+
+
+            if (empty($pointDescription['GPS'])) $pointDescription['GPS'] = '0, 0';
+            list($latitude, $longitude) = explode(',', $pointDescription['GPS']);
+            $Point->GPS
+                ->setLatitude((float)$latitude ?? 0)
+                ->setLongitude((float)$longitude ?? 0);
+
+            $saveResult = $Point->save();
+
+        } catch (\Exception $e) {
+            $dataBase->rollback();
+            throw new \Exception('Error added entry in database!' . $e);
+        }
+
+        $dataBase->commit();
+
+        return $saveResult ? $Point : false;
+    }
 
 
 }

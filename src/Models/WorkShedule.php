@@ -46,7 +46,7 @@ class WorkShedule extends AbstractModel
      * @param $value
      * @return string|null
      */
-    public function getValueField($value): ?string
+    public function getValueField($value, $field = null): ?string
     {
         if(is_string($value) && strlen($value) == 5 && strpos($value, ':'))
             return $value .= ':00';

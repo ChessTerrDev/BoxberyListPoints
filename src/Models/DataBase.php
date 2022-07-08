@@ -180,6 +180,8 @@ class DataBase
         $query .= ') WHERE id = :id';
 
         $statement = $this->dataBaseHost->prepare($query);
+        //echo $query;
+        //var_dump($bindValues);
         return $statement->execute($bindValues);
     }
 

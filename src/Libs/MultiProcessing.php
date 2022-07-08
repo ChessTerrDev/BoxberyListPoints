@@ -82,7 +82,8 @@ class MultiProcessing
         $startCallbackFunction = $this->startCallbackFunction;
         $command = ['php', $path];
         if (is_array($param)) foreach ($param as $key => $val) {
-            $command[] = '--' . $key . '="' .$val . '"';
+            $commandStr = '--' . $key . '="' .$val . '"';
+            $command[] = str_replace('""', '"', $commandStr);
         }
 
         $process = new Process($command);

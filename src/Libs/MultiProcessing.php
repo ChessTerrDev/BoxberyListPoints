@@ -9,9 +9,16 @@ class MultiProcessing
     private array $pullProcess = [];
     private string $scriptPath;
     private array $params;
-    private int $sumOfProcesses = 50;
+    private int $sumOfProcesses = 10;
     private ?\Closure $finishCallbackFunction = null;
     private ?\Closure $startCallbackFunction  = null;
+    private array $statistics = [
+        'startingNumberEntries' => 0,
+        'processesStarted' => 0,
+        'completedProcesses' => 0,
+        'processStartupCycles' => 0,
+        'scriptExecutionTime' => 0
+    ];
 
 
     /**
@@ -31,15 +38,18 @@ class MultiProcessing
     public function run()
     {
         echo "Starting MultiProcessing \n";
+        $this->statistics['startingNumberEntries'] = count($this->params);
+        $this->statistics['scriptExecutionTime'] = microtime(true);
 
         while (true) {
             $this->initProcesses();
-
+            $this->statistics['processStartupCycles'] += 1;
             sleep(1);
 
             if (empty($this->pullProcess))  {
                 echo "Finished MultiProcessing \n";
-                return;
+                $this->statistics['scriptExecutionTime'] = microtime(true) - $this->statistics['scriptExecutionTime'];
+                return $this->statistics;
             }
 
             $this->checkFinish();
@@ -55,7 +65,7 @@ class MultiProcessing
         foreach ($this->params as $key => $param) {
             if (count($this->pullProcess) >= $this->sumOfProcesses) return;
 
-            $this->initProcess($this->scriptPath, $param['Code']);
+            $this->initProcess($this->scriptPath, $param);
 
             unset($this->params[$key]);
         }
@@ -67,15 +77,20 @@ class MultiProcessing
      * @param $code
      * @return \Symfony\Component\Process\Process
      */
-    private function initProcess(string $path, $code): Process
+    private function initProcess(string $path, $param): Process
     {
         $startCallbackFunction = $this->startCallbackFunction;
+        $command = ['php', $path];
+        if (is_array($param)) foreach ($param as $key => $val) {
+            $command[] = '--' . $key . '="' .$val . '"';
+        }
 
-        $process = new Process(['php', $path, "--code=$code"]);
-        $process->start($startCallbackFunction("--code=$code"));
+        $process = new Process($command);
+        $process->start($startCallbackFunction("--code=" . $param['Code']));
 
         $this->pullProcess[$process->getPid() . ':' . $path] = $process;
 
+        $this->statistics['processesStarted'] += 1;
         return $process;
     }
 
@@ -90,6 +105,7 @@ class MultiProcessing
                 $finishCallbackFunction = $this->finishCallbackFunction;
                 $finishCallbackFunction($nameProcess . " : " . $process->getOutput());
 
+                $this->statistics['completedProcesses'] += 1;
                 unset($this->pullProcess[$nameProcess]);
             }
         }

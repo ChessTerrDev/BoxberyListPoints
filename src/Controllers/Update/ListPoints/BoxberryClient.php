@@ -2,7 +2,7 @@
 
 namespace BoxberryListPoints\Controllers\Update\ListPoints;
 
-use BoxberryListPoints\Configuration\Constants;
+use BoxberryListPoints\Config\Constants;
 
 class BoxberryClient
 {

@@ -2,8 +2,8 @@
 
 namespace BoxberryListPoints\Controllers;
 
+use BoxberryListPoints\DateBase\{Connection, DataBase};
 use BoxberryListPoints\Models\{
-    DataBase,
     Addresses as AddressModel,
     Areas as AreaModel,
     Cities as CityModel,
@@ -48,7 +48,8 @@ class ListPoint
             return $result;
         }
 
-        $dataBase = new DataBase();
+        $connection = new Connection();
+        $dataBase = new DataBase($connection->connect());
         $dataBase->beginTransaction();
 
         try {
@@ -175,7 +176,8 @@ class ListPoint
      */
     public static function updatePoint(ListPointModel $Point, array $pointDescription): bool|ListPointModel
     {
-        $dataBase = new DataBase();
+        $connection = new Connection();
+        $dataBase = new DataBase($connection->connect());
         $dataBase->beginTransaction();
 
         try {

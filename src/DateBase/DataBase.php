@@ -218,4 +218,8 @@ class DataBase
         return array($query, $tableFields);
     }
 
+    public function execution($sql)
+    {
+        $this->connection->exec($sql);
+    }
 }

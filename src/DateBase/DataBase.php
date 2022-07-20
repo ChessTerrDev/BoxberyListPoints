@@ -1,29 +1,14 @@
 <?php
 
-namespace BoxberryListPoints\Models;
-
-use BoxberryListPoints\Configuration\Constants;
-use PDO;
-use PDOException;
+namespace BoxberryListPoints\DateBase;
 
 class DataBase
 {
-    private PDO $dataBaseHost;
+    private \PDO $connection;
 
-    public function __construct()
+    public function __construct(\PDO $connection)
     {
-        try {
-            $this->dataBaseHost = new PDO(
-                Constants::DATA_BASE_CONNECTION['driver'] . ':' .
-                'host=' . Constants::DATA_BASE_CONNECTION['host'] . ';' .
-                'dbname=' . Constants::DATA_BASE_CONNECTION['database'],
-                Constants::DATA_BASE_CONNECTION['username'],
-                Constants::DATA_BASE_CONNECTION['password']
-            );
-        } catch (PDOException $e) {
-            print "Error connection with Data Base!: " . $e->getMessage();
-            die();
-        }
+        $this->connection = $connection;
     }
 
 
@@ -61,11 +46,11 @@ class DataBase
         $query .= $valueFields;
         $query .= ')';
 
-        $statement = $this->dataBaseHost->prepare($query);
+        $statement = $this->connection->prepare($query);
         $statement->execute($executeArray);
 
         if ($PrimaryKey)
-            return (int)$this->dataBaseHost->lastInsertId('"' . $table . '_' . $PrimaryKey . '_seq"');
+            return (int)$this->connection->lastInsertId('"' . $table . '_' . $PrimaryKey . '_seq"');
 
         return true;
     }
@@ -99,10 +84,10 @@ class DataBase
 
         $query .= ' "id" = ?';
 
-        $statement = $this->dataBaseHost->prepare($query);
+        $statement = $this->connection->prepare($query);
         $statement->execute([$id]);
 
-        return $statement->fetch(PDO::FETCH_ASSOC);
+        return $statement->fetch(\PDO::FETCH_ASSOC);
     }
 
     /**
@@ -129,10 +114,10 @@ class DataBase
                 $query .= ' AND ';
         }
 
-        $statement = $this->dataBaseHost->prepare($query);
+        $statement = $this->connection->prepare($query);
         $statement->execute($bindValues);
 
-        return $statement->fetchAll(PDO::FETCH_ASSOC);
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     public function fundAll(string $table, ?array $fields = null): bool|array
@@ -142,10 +127,10 @@ class DataBase
 
         list($query, $tableFields) = $this->extracted($fields ? array_flip($fields) : null, $table);
 
-        $statement = $this->dataBaseHost->prepare(str_replace(' WHERE ', '', $query));
+        $statement = $this->connection->prepare(str_replace(' WHERE ', '', $query));
         $statement->execute();
 
-        return $statement->fetchAll(PDO::FETCH_ASSOC);
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     /**
@@ -179,7 +164,7 @@ class DataBase
         $query .= $tableValue;
         $query .= ') WHERE id = :id';
 
-        $statement = $this->dataBaseHost->prepare($query);
+        $statement = $this->connection->prepare($query);
         //echo $query;
         //var_dump($bindValues);
         return $statement->execute($bindValues);
@@ -191,7 +176,7 @@ class DataBase
      */
     public function beginTransaction(): void
     {
-        $this->dataBaseHost->beginTransaction();
+        $this->connection->beginTransaction();
     }
 
     /**
@@ -199,7 +184,7 @@ class DataBase
      */
     public function commit(): void
     {
-        $this->dataBaseHost->commit();
+        $this->connection->commit();
     }
 
     /**
@@ -207,7 +192,7 @@ class DataBase
      */
     public function rollback(): void
     {
-        $this->dataBaseHost->rollBack();
+        $this->connection->rollBack();
     }
 
     /**

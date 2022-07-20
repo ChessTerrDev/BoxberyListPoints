@@ -2,7 +2,7 @@
 
 namespace BoxberryListPoints\Models;
 
-use function PHPUnit\Framework\returnArgument;
+use BoxberryListPoints\DateBase\{Connection, DataBase};
 
 abstract class AbstractModel
 {
@@ -209,13 +209,16 @@ abstract class AbstractModel
 
     /**
      * DataBase set or DataBase init. return DataBase
-     * @param \BoxberryListPoints\Models\DataBase|null $dataBase
-     * @return \BoxberryListPoints\Models\DataBase|null
+     * @param \BoxberryListPoints\DateBase\DataBase|null $dataBase
+     * @return \BoxberryListPoints\DateBase\DataBase|null
      */
     public function initDataBase(?DataBase $dataBase = null): ?DataBase
     {
         if ($dataBase) $this->dataBase = $dataBase;
-        if (empty($this->dataBase)) $this->dataBase = new DataBase();
+        if (empty($this->dataBase)) {
+            $connection = new Connection();
+            $this->dataBase = new DataBase($connection->connect());
+        }
 
         return $this->dataBase;
     }

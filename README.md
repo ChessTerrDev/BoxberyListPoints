@@ -20,29 +20,25 @@
 Каждый метод поиска возвращает массив со всеми найденными ПВЗ. Каждый элемент массива это объект класса
 ``BoxberryListPoints\Models\ListPoints``, он включает в себя всю информацию о ПВЗ. 
 Каждое свойство объекта имеет свой get'ер. 
-### Показать по id 
+### Поиск по id 
 Возвращает объект ListPoints
 ```php
 use \BoxberryListPoints\Controllers\ListPointShort;
 $listPoints = ListPointShort::findPointShortById(1692);
 ```
-### Показать по Code ПВЗ
+### Поиск по Code ПВЗ
 Возвращает массив объектов ListPoints
 ```php
-use \BoxberryListPoints\Controllers\ListPointShort;
 $listPoints = ListPointShort::findPointShortByCode('19908');
 ```
-### Показать по ZipCode
+### Поиск по ZipCode
 Возвращает массив объектов ListPoints
 ```php
-use \BoxberryListPoints\Controllers\ListPointShort;
 $listPoints = ListPointShort::findPointShortByZipCode(101000)
 ```
 ### Поиск по полному адресу
 Возвращает массив объектов ListPoints
 ```php
-use \BoxberryListPoints\Controllers\ListPointShort;
-
 $listPoints = ListPointShort::findPointShortByAddress('Москва', 'Октябрьская'));
 
 $listPoints = ListPointShort::findPointShortByAddress(
@@ -56,12 +52,10 @@ $listPoints = ListPointShort::findPointShortByAddress(
 ```
 ### Поиск по названию города
 ```php
-use \BoxberryListPoints\Controllers\ListPointShort;
 $listPoints = ListPointShort::findPointShortByCityName('Москва')
 ```
 ### Поиск по населенному пункту
 ```php
-use \BoxberryListPoints\Controllers\ListPointShort;
 $listPoints = ListPointShort::findPointShortBySettlement('Кумертау')
 ```
 

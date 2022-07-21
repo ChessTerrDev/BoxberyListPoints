@@ -7,8 +7,8 @@ error_reporting(E_ALL);
 
 require_once '../vendor/autoload.php';
 
-$connection = new \BoxberryListPoints\DateBase\Connection();
-$dataBase = new \BoxberryListPoints\DateBase\DataBase($connection->connect());
+$connection = new \BoxberryListPoints\DataBase\Connection();
+$dataBase = new \BoxberryListPoints\DataBase\DataBase($connection->connect());
 
 $sql = file_get_contents('./TableList.sql');
 $dataBase->execution($sql);

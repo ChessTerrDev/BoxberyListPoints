@@ -2,7 +2,7 @@
 
 namespace BoxberryListPoints\Models;
 
-use BoxberryListPoints\DateBase\{Connection, DataBase};
+use BoxberryListPoints\DataBase\{Connection, DataBase};
 
 abstract class AbstractModel
 {
@@ -71,7 +71,7 @@ abstract class AbstractModel
     {
         return $this
             ->initDataBase()
-            ->fundAll($this->baseName(), $Fields);
+            ->findAll($this->baseName(), $Fields);
     }
 
 
@@ -209,8 +209,8 @@ abstract class AbstractModel
 
     /**
      * DataBase set or DataBase init. return DataBase
-     * @param \BoxberryListPoints\DateBase\DataBase|null $dataBase
-     * @return \BoxberryListPoints\DateBase\DataBase|null
+     * @param \BoxberryListPoints\DataBase\DataBase|null $dataBase
+     * @return \BoxberryListPoints\DataBase\DataBase|null
      */
     public function initDataBase(?DataBase $dataBase = null): ?DataBase
     {

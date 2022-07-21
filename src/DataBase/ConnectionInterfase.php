@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace BoxberryListPoints\DateBase;
+namespace BoxberryListPoints\DataBase;
 
 interface ConnectionInterfase
 {

@@ -2,7 +2,7 @@
 
 namespace BoxberryListPoints\Controllers;
 
-use BoxberryListPoints\DateBase\{Connection, DataBase};
+use BoxberryListPoints\DataBase\{Connection, DataBase};
 use BoxberryListPoints\Models\{
     Addresses as AddressModel,
     Areas as AreaModel,

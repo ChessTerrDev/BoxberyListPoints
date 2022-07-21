@@ -2,8 +2,8 @@
 
 namespace BoxberryListPoints\Controllers;
 
+use BoxberryListPoints\DataBase\{Connection, DataBase};
 use BoxberryListPoints\Models\{
-    DataBase,
     Addresses as AddressModel,
     Areas as AreaModel,
     Cities as CityModel,
@@ -36,7 +36,8 @@ class ListPointShort
         ?string $apartment = null
     ): array
     {
-        $dataBase = new DataBase();
+        $connection = new Connection();
+        $dataBase = new DataBase($connection->connect());
 
         $cityModel = new CityModel();
         $cityModel->initDataBase($dataBase);
@@ -47,7 +48,7 @@ class ListPointShort
 
         $address = new AddressModel();
         $address->initDataBase($dataBase);
-        $address->setCitiesId($cityModel->getId())
+        $address->setCitiesId($resultCityFind[0]->getId())
             ->setStreet($street);
 
         if ($house) $address->setHouse($house);
@@ -56,10 +57,20 @@ class ListPointShort
         if ($apartment) $address->setApartment($apartment);
 
         $results = $address->find();
-        if (!empty($results))
-            return static::findPointsShortByFieldId('setAddressId', $results, $dataBase);
+        $list = [];
+        if (!empty($results)) {
+            $PointModel = new ListPointModel();
+            $PointModel->initDataBase($dataBase);
 
-        return [];
+            foreach ($results as $resultName => $result) {
+                $PointModel->setAddress($result);
+                $resultPoint = $PointModel->find();
+                unset($results[$resultName]);
+                $list = array_merge($list, $resultPoint);
+            }
+        }
+
+        return $list;
     }
 
     public static function findAllPointsShort(?array $Fields = null): array|bool
@@ -115,16 +126,15 @@ class ListPointShort
      */
     public static function findPointShortByCityName($city): array
     {
-        $dataBase = new DataBase();
+        $connection = new Connection();
+        $dataBase = new DataBase($connection->connect());
 
         $cityModel = new CityModel();
+        $cityModel->initDataBase($dataBase);
         $cityModel->setName($city);
-        $results = $cityModel->find();
+        $result = self::extracted($cityModel, $dataBase);
 
-        if (!empty($results))
-            return static::findPointsShortByFieldId('setCityId', $results, $dataBase);
-
-        return [];
+        return $result;
     }
 
     /**
@@ -134,17 +144,15 @@ class ListPointShort
      */
     public static function findPointShortBySettlement($settlement): array
     {
-        $dataBase = new DataBase();
+        $connection = new Connection();
+        $dataBase = new DataBase($connection->connect());
 
         $cityModel = new CityModel();
         $cityModel->initDataBase($dataBase);
         $cityModel->setSettlement($settlement);
-        $results = $cityModel->find();
+        $result = self::extracted($cityModel, $dataBase);
 
-        if (!empty($results))
-            return static::findPointsShortByFieldId('setCityId', $results, $dataBase);
-
-        return [];
+        return $result;
     }
 
     /**
@@ -159,29 +167,33 @@ class ListPointShort
     }
 
     /**
-     * @param string $fieldSetter
-     * @param array $results
-     * @param \BoxberryListPoints\Models\DataBase $dataBase
-     * @return array
+     * @param \BoxberryListPoints\Models\Cities $cityModel
+     * @return array|bool
      * @throws \Exception
      */
-    protected static function findPointsShortByFieldId(string $fieldSetter, array $results, DataBase $dataBase): array
+    private static function extracted(CityModel $cityModel, $dataBase): array|bool
     {
-        $PointModel = new ListPointModel();
-        if (!method_exists($PointModel, $fieldSetter))
-            throw new \Exception('Переден некоректный метод');
+        $results = $cityModel->find();
 
-        $list = [];
-        foreach ($results as $resultName => $result) {
-            $Point = clone $PointModel;
-            $Point->initDataBase($dataBase);
-            $resultPoint = $Point
-                ->$fieldSetter($result->getId())
-                ->find();
-            unset($results[$resultName]);
-            $list = array_merge($list, $resultPoint);
+        if (empty($results)) return [];
+        if (count($results) == 1) {
+            $PointModel = new ListPointModel();
+            $PointModel->initDataBase($dataBase);
+            $PointModel->setCity($results[0]);
+            $list = $PointModel->find();
+        } else {
+            $PointModel = new ListPointModel();
+            $PointModel->initDataBase($dataBase);
+            $list = [];
+            foreach ($results as $resultName => $result) {
+                $PointModel->setCity($result);
+                $resultPoint = $PointModel->find();
+                unset($results[$resultName]);
+                $list = array_merge($list, $resultPoint);
+            }
         }
-        return  $list;
+        return $list;
     }
+
 
 }

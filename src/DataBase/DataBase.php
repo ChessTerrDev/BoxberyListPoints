@@ -1,6 +1,6 @@
 <?php
 
-namespace BoxberryListPoints\DateBase;
+namespace BoxberryListPoints\DataBase;
 
 class DataBase
 {
@@ -120,7 +120,7 @@ class DataBase
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-    public function fundAll(string $table, ?array $fields = null): bool|array
+    public function findAll(string $table, ?array $fields = null): bool|array
     {
         if (empty($table))
             throw new \Exception('Не указанна таблица!');
